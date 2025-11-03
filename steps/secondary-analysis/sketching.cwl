@@ -4,7 +4,7 @@ label: Perform secondary analysis on raw data product
 
 hints:
   DockerRequirement:
-    dockerPull: hubmap/rna-data-products-sketching
+    dockerPull: sennet/rna-data-products-sketching
 baseCommand: /opt/sketching.py
 
 inputs: 

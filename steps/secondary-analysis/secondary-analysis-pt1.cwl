@@ -4,7 +4,7 @@ label: Perform secondary analysis on raw data product
 
 hints:
   DockerRequirement:
-    dockerPull: hubmap/rna-data-products-python
+    dockerPull: sennet/rna-data-products-python
 baseCommand: /opt/secondary_analysis_pt1.py
 
 inputs: 

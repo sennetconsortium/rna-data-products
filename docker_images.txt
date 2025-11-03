@@ -1,4 +1,4 @@
-hubmap/rna-data-products-python	docker/python/Dockerfile	base_directory_build
-hubmap/rna-data-products-shinycell docker/ShinyCell/Dockerfile base_directory_build
-hubmap/rna-data-products-azimuth docker/azimuth/Dockerfile base_directory_build
-hubmap/rna-data-products-sketching docker/sketching/Dockerfile base_directory_build
+sennet/rna-data-products-python	docker/python/Dockerfile	base_directory_build
+sennet/rna-data-products-shinycell docker/ShinyCell/Dockerfile base_directory_build
+sennet/rna-data-products-azimuth docker/azimuth/Dockerfile base_directory_build
+sennet/rna-data-products-sketching docker/sketching/Dockerfile base_directory_build

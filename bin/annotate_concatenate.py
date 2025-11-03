@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, Tuple
 
 import anndata
-import gzip
+import lzma
 import numpy as np
 import pandas as pd
 import requests
@@ -65,11 +65,9 @@ def find_files(directory, patterns):
 
 
 def find_file_pairs(directory):
-    filtered_patterns = ["cluster_marker_genes.h5ad", "secondary_analysis.h5ad"]
-    unfiltered_patterns = ["out.h5ad", "expr.h5ad"]
-    filtered_file = find_files(directory, filtered_patterns)
+    unfiltered_patterns = ["expr.h5ad"]
     unfiltered_file = find_files(directory, unfiltered_patterns)
-    return filtered_file, unfiltered_file
+    return unfiltered_file
 
 
 def annotate_file(
@@ -100,13 +98,15 @@ def read_gene_mapping() -> Dict[str, str]:
     """
     Try to find the Ensembl to HUGO symbol mapping, with paths suitable
     for running this script inside and outside a Docker container.
-    :return:
     """
     for directory in GENE_MAPPING_DIRECTORIES:
-        mapping_file = directory / "ensembl_to_symbol.json"
+        mapping_file = directory / "ensembl_hugo_symbol.json.xz"
         if mapping_file.is_file():
-            with open(mapping_file) as f:
-                return json.load(f)
+            with lzma.open(mapping_file) as f:
+                json_bytes = f.read()
+                stri = json_bytes.decode("utf-8")
+                data = json.loads(stri)
+                return data
     message_pieces = ["Couldn't find Ensembl → HUGO mapping file. Tried:"]
     message_pieces.extend(f"\t{path}" for path in GENE_MAPPING_DIRECTORIES)
     raise ValueError("\n".join(message_pieces))
@@ -135,7 +135,7 @@ def map_gene_ids(adata):
     return adata
 
 
-def create_json(data_product_uuid, creation_time, uuids, hbmids, cell_count, tissue = None):
+def create_json(data_product_uuid, creation_time, uuids, sntids, cell_count, tissue = None):
     bucket_url = f"https://g-24f5cc.09193a.5898.dn.glob.us/public/hubmap-data-products/{data_product_uuid}"
     metadata = {
         "Data Product UUID": data_product_uuid,
@@ -145,7 +145,7 @@ def create_json(data_product_uuid, creation_time, uuids, hbmids, cell_count, tis
         "Processed URL": bucket_url + f"{tissue}_processed.h5mu" if tissue else bucket_url + "rna_processed.h5mu",
         "Creation Time": creation_time,
         "Dataset UUIDs": uuids,
-        "Dataset HBMIDs": hbmids,
+        "Dataset SNTIDs": sntids,
         "Raw Total Cell Count": cell_count,
     }
     print("Writing metadata json")
@@ -157,22 +157,22 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
     raw_output_file_name = f"{tissue}_raw" if tissue else "rna_raw"
     uuids_df = pd.read_csv(uuids_file, sep="\t", dtype=str)
     uuids_list = uuids_df["uuid"].to_list()
-    hbmids_list = uuids_df["hubmap_id"].to_list()
+    sntids_list = uuids_df["sennet_id"].to_list()
     directories = [data_directory / Path(uuid) for uuid in uuids_df["uuid"]]
     # Load files
-    file_pairs = [
+    files = [
         find_file_pairs(directory)
         for directory in directories
         if len(listdir(directory)) > 1
     ]
     print("Annotating objects")
-    adatas = [annotate_file(file_pair[1], tissue) for file_pair in file_pairs]
+    adatas = [annotate_file(file, tissue) for file in files]
     saved_var = adatas[0].var
     print("Concatenating objects")
     adata = anndata.concat(adatas, join="outer")
     creation_time = str(datetime.now())
     adata.uns["creation_date_time"] = creation_time
-    adata.uns["datasets"] = hbmids_list
+    adata.uns["datasets"] = sntids_list
     data_product_uuid = str(uuid.uuid4())
     adata.uns["uuid"] = data_product_uuid
     adata.var = saved_var
@@ -183,7 +183,7 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
         data_product_uuid,
         creation_time,
         uuids_list,
-        hbmids_list,
+        sntids_list,
         total_cell_count,
         tissue
     )
