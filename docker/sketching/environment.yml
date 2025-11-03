@@ -1,0 +1,10 @@
+name: sketching
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.8,<3.10
+  - pip
+  - anndata==0.9.2
+  - pip:
+      - sclkme
