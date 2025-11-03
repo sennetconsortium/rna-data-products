@@ -17,21 +17,25 @@ def main(uuids_file: Path, tissue: str):
         h5ads_directory.mkdir(parents=True, exist_ok=True)
         out_file = h5ads_directory / "expr.h5ad"
         url = f"https://assets.api.sennetconsortium.org/{uuid}/expr.h5ad"
-
-        # Check if file exists before downloading
+        # Check if file exists and downlaod
         try:
-            response = requests.head(url, allow_redirects=True)
-            if response.status_code != 200:
-                print(f"File for {uuid} does not exist on server (status {response.status_code}).")
+            head = requests.head(url, allow_redirects=True)
+            if head.status_code != 200:
+                print(f"File for {uuid} does not exist on server (status {head.status_code}).")
                 continue
         except requests.RequestException as e:
             print(f"Error checking {uuid}: {e}")
             continue
-        print(f"Downloading {uuid} ...")
         try:
-            subprocess.run(["wget", "-q", url, "-O", str(out_file)], check=True)
-        except subprocess.CalledProcessError:
-            print(f"Failed to download {uuid}")
+            print(f"Downloading {uuid} ...")
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                with open(out_file, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            print(f"Downloaded {uuid} successfully.")
+        except requests.RequestException as e:
+            print(f"Failed to download {uuid}: {e}")
 
 
 if __name__ == "__main__":
