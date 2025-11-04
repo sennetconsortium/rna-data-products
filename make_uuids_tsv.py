@@ -13,7 +13,7 @@ organ_uberon_file = "bin/organs.json"
 def get_uuids(organ_uberon: str):
     params = {
         "status": "Published",
-        "dataset_type": "RNAseq",
+        "dataset_type": "RNAseq [Salmon]",
     }
 
     if organ_uberon:
