@@ -161,7 +161,8 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
     uuids_df = pd.read_csv(uuids_file, sep="\t", dtype=str)
     uuids_list = uuids_df["uuid"].to_list()
     sntids_list = uuids_df["sennet_id"].to_list()
-    directories = [data_directory / Path(uuid) for uuid in uuids_df["uuid"]]
+    directories = [data_directory / Path(id) for id in uuids_df["uuid"]]
+    print(directories)
     # Load files
     files = [
         find_file_pairs(directory)
