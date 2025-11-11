@@ -90,7 +90,6 @@ def annotate_file(
         cell_ids_list, index=unfiltered_copy.obs.index, dtype=str
     )
     unfiltered_copy.obs.set_index("cell_id", drop=True, inplace=True)
-    unfiltered_copy = map_gene_ids(unfiltered_copy)
     return unfiltered_copy
 
 
@@ -167,7 +166,6 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
     ]
     print("Annotating objects")
     adatas = [annotate_file(file, tissue) for file in files]
-    saved_var = adatas[0].var
     print("Concatenating objects")
     adata = anndata.concat(adatas, join="outer")
     creation_time = str(datetime.now())
@@ -175,7 +173,7 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
     adata.uns["datasets"] = sntids_list
     data_product_uuid = str(uuid.uuid4())
     adata.uns["uuid"] = data_product_uuid
-    adata.var = saved_var
+    adata = map_gene_ids(adata)
     print(f"Writing {raw_output_file_name}")
     adata.write(f"{raw_output_file_name}.h5ad")
     total_cell_count = adata.obs.shape[0]
