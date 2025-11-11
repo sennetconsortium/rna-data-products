@@ -57,11 +57,8 @@ def get_inverted_gene_dict():
 def find_files(directory, patterns):
     for dirpath_str, dirnames, filenames in walk(directory):
         dirpath = Path(dirpath_str)
-        print(dirpath)
         for filename in filenames:
-            print(filename)
             filepath = dirpath / filename
-            print(filepath)
             for pattern in patterns:
                 if filepath.match(pattern):
                     return filepath
@@ -103,7 +100,7 @@ def read_gene_mapping() -> Dict[str, str]:
     for running this script inside and outside a Docker container.
     """
     for directory in GENE_MAPPING_DIRECTORIES:
-        mapping_file = directory / "ensembl_hugo_symbol.json.xz"
+        mapping_file = directory / "ensembl_hugo_mapping.json.xz"
         if mapping_file.is_file():
             with lzma.open(mapping_file) as f:
                 json_bytes = f.read()
@@ -168,10 +165,8 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
         for directory in directories
         if len(listdir(directory)) >= 1
     ]
-    print(files)
     print("Annotating objects")
     adatas = [annotate_file(file, tissue) for file in files]
-    print(adatas)
     saved_var = adatas[0].var
     print("Concatenating objects")
     adata = anndata.concat(adatas, join="outer")
