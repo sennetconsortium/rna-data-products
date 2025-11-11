@@ -111,27 +111,12 @@ def read_gene_mapping() -> Dict[str, str]:
     raise ValueError("\n".join(message_pieces))
 
 
-def map_gene_ids(adata):
-    obsm = adata.obsm
-    uns = adata.uns
+def map_gene_ids(var):
     gene_mapping = read_gene_mapping()
-    has_hugo_symbol = [gene in gene_mapping for gene in adata.var.index]
-    # adata = adata[:, has_hugo_symbol]
-    temp_df = pd.DataFrame(
-        adata.X.todense(), index=adata.obs.index, columns=adata.var.index
-    )
-    aggregated = temp_df.groupby(level=0, axis=1).sum()
-    adata = anndata.AnnData(aggregated, obs=adata.obs)
-    adata.var["hugo_symbol"] = [
-        gene_mapping.get(var, np.nan) for var in adata.var.index
+    var["hugo_symbol"] = [
+        gene_mapping.get(var, np.nan) for var in var.index
     ]
-    adata.obsm = obsm
-    adata.uns = uns
-    # This introduces duplicate gene names, use Pandas for aggregation
-    # since anndata doesn't have that functionality
-    adata.X = scipy.sparse.csr_matrix(adata.X)
-    adata.var_names_make_unique()
-    return adata
+    return var
 
 
 def create_json(data_product_uuid, creation_time, uuids, sntids, cell_count, tissue = None):
@@ -173,7 +158,7 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
     adata.uns["datasets"] = sntids_list
     data_product_uuid = str(uuid.uuid4())
     adata.uns["uuid"] = data_product_uuid
-    adata = map_gene_ids(adata)
+    adata.var = map_gene_ids(adata.var)
     print(f"Writing {raw_output_file_name}")
     adata.write(f"{raw_output_file_name}.h5ad")
     total_cell_count = adata.obs.shape[0]
