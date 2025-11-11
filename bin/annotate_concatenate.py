@@ -135,7 +135,7 @@ def map_gene_ids(adata):
     return adata
 
 
-def create_json(data_product_uuid, creation_time, uuids, hbmids, cell_count, tissue = None):
+def create_json(data_product_uuid, creation_time, uuids, sntids, cell_count, tissue = None):
     bucket_url = f"https://g-24f5cc.09193a.5898.dn.glob.us/public/hubmap-data-products/{data_product_uuid}"
     metadata = {
         "Data Product UUID": data_product_uuid,
@@ -145,7 +145,7 @@ def create_json(data_product_uuid, creation_time, uuids, hbmids, cell_count, tis
         "Processed URL": bucket_url + f"{tissue}_processed.h5mu" if tissue else bucket_url + "rna_processed.h5mu",
         "Creation Time": creation_time,
         "Dataset UUIDs": uuids,
-        "Dataset HBMIDs": hbmids,
+        "Dataset SNTIDs": sntids,
         "Raw Total Cell Count": cell_count,
     }
     print("Writing metadata json")
@@ -157,7 +157,7 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
     raw_output_file_name = f"{tissue}_raw" if tissue else "rna_raw"
     uuids_df = pd.read_csv(uuids_file, sep="\t", dtype=str)
     uuids_list = uuids_df["uuid"].to_list()
-    hbmids_list = uuids_df["hubmap_id"].to_list()
+    sntids_list = uuids_df["sennet_id"].to_list()
     directories = [data_directory / Path(uuid) for uuid in uuids_df["uuid"]]
     # Load files
     files = [
@@ -172,7 +172,7 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
     adata = anndata.concat(adatas, join="outer")
     creation_time = str(datetime.now())
     adata.uns["creation_date_time"] = creation_time
-    adata.uns["datasets"] = hbmids_list
+    adata.uns["datasets"] = sntids_list
     data_product_uuid = str(uuid.uuid4())
     adata.uns["uuid"] = data_product_uuid
     adata.var = saved_var
@@ -183,7 +183,7 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
         data_product_uuid,
         creation_time,
         uuids_list,
-        hbmids_list,
+        sntids_list,
         total_cell_count,
         tissue
     )
