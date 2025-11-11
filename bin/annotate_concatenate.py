@@ -57,8 +57,11 @@ def get_inverted_gene_dict():
 def find_files(directory, patterns):
     for dirpath_str, dirnames, filenames in walk(directory):
         dirpath = Path(dirpath_str)
+        print(dirpath)
         for filename in filenames:
+            print(filename)
             filepath = dirpath / filename
+            print(filepath)
             for pattern in patterns:
                 if filepath.match(pattern):
                     return filepath
@@ -158,15 +161,17 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
     uuids_df = pd.read_csv(uuids_file, sep="\t", dtype=str)
     uuids_list = uuids_df["uuid"].to_list()
     sntids_list = uuids_df["sennet_id"].to_list()
-    directories = [data_directory / Path(uuid) for uuid in uuids_df["uuid"]]
+    directories = [data_directory / Path(id) for id in uuids_df["uuid"]]
     # Load files
     files = [
         find_file_pairs(directory)
         for directory in directories
-        if len(listdir(directory)) > 1
+        if len(listdir(directory)) >= 1
     ]
+    print(files)
     print("Annotating objects")
     adatas = [annotate_file(file, tissue) for file in files]
+    print(adatas)
     saved_var = adatas[0].var
     print("Concatenating objects")
     adata = anndata.concat(adatas, join="outer")
