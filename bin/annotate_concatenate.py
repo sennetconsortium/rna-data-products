@@ -165,8 +165,10 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
         for directory in directories
         if len(listdir(directory)) > 1
     ]
+    print(files)
     print("Annotating objects")
     adatas = [annotate_file(file, tissue) for file in files]
+    print(adatas)
     saved_var = adatas[0].var
     print("Concatenating objects")
     adata = anndata.concat(adatas, join="outer")
