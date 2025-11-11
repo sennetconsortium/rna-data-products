@@ -4,7 +4,7 @@ label: Generates ShinyCell app
 
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/rna-data-products-shinycell
+    dockerPull: sennet/rna-data-products-shinycell
 
 inputs:
   processed_h5ad_file:

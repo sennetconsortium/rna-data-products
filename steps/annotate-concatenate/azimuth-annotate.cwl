@@ -4,7 +4,7 @@ label: Uses new pan organ Azimuth tool to annotate cell types for any organ
 
 hints:
   DockerRequirement:
-    dockerPull: hubmap/rna-data-products-azimuth
+    dockerPull: sennet/rna-data-products-azimuth
 baseCommand: /opt/pan_organ_azimuth.py
 
 
