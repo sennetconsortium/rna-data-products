@@ -57,8 +57,11 @@ def get_inverted_gene_dict():
 def find_files(directory, patterns):
     for dirpath_str, dirnames, filenames in walk(directory):
         dirpath = Path(dirpath_str)
+        print(dirpath)
         for filename in filenames:
+            print(filename)
             filepath = dirpath / filename
+            print(filepath)
             for pattern in patterns:
                 if filepath.match(pattern):
                     return filepath
