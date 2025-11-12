@@ -7,8 +7,8 @@ hints:
     dockerPull: sennet/rna-data-products-python
 baseCommand: /opt/secondary_analysis_pt1.py
 
-inputs: 
-    annotated_raw_h5ad_file:
+inputs:
+    raw_h5ad_file:
         type: File
         doc: The raw h5ad file
         inputBinding:
@@ -19,17 +19,17 @@ inputs:
         doc: optional tissue type
         inputBinding:
             position: 1
-    
+
     uuids_file:
         type: File
         doc: File with UUIDs and patient metadata
         inputBinding:
             position: 2
-    
+
     data_product_metadata:
         type: File
         doc: data product metadata
-        inputBinding: 
+        inputBinding:
             position: 3
 
 outputs:
@@ -44,7 +44,7 @@ outputs:
         outputBinding:
             glob: "*_processed.h5ad"
         doc: h5ad file with secondary analysis processing
-    
+
     updated_data_product_metadata:
         type: File
         outputBinding:
