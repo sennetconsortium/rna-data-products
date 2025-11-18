@@ -46,7 +46,7 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
     sc.tl.leiden(adata)
     sc.tl.rank_genes_groups(adata, "leiden")
 
-    if "final_level_labels" in adata.obs_keys():
+    if "CL_Label" in adata.obs_keys():
 
         non_na_values = adata.obs.final_level_labels.dropna()
         counts_dict = non_na_values.value_counts().to_dict()
@@ -55,12 +55,12 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
         ]
         adata_filter = adata[adata.obs.final_level_labels.isin(keep_cell_types)]
         sc.tl.rank_genes_groups(
-            adata_filter, "final_level_labels", key_added="rank_genes_groups_cell_types"
+            adata_filter, "CL_Label", key_added="rank_genes_groups_cell_types"
         )
         adata.uns = adata_filter.uns
 
-    if "final_level_labels" in adata.obs_keys():
-        cell_type_counts = adata.obs["final_level_labels"].value_counts().to_dict()
+    if "CL_Label" in adata.obs_keys():
+        cell_type_counts = adata.obs["CL_Label"].value_counts().to_dict()
         adata.uns["cell_type_counts"] = json.dumps(cell_type_counts)
         metadata = add_cell_counts(
             data_product_metadata, cell_type_counts, total_cell_count
@@ -86,6 +86,16 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
         'mechanism': 'machine',
         'protocol': "10.1186/s13059-017-1382-0",
     }
+    if 'CL_Label' in adata.obs_keys():
+        azimuth = adata.obs[['full_hierarchical_labels', 'final_level_labels', 'final_level_confidence', 'full_consistent_hierarchy', 'azimuth_broad', 'azimuth_medium', 'azimuth_fine', 'CL_Label', 'CL_ID']]
+        adata.obsm['annotation'] = pd.DataFrame(adata.obs['CL_Label'])
+        adata.obsm['azimuth'] = azimuth
+        adata.uns['azimuth'] = {
+            'label': 'Cell Ontology Annotation',
+            'ontologyID': 'predicted_CLID',
+            'mechanism': 'machine',
+            'protocol': "10.1016/j.cell.2021.04.048",
+        }
     mdata = mu.MuData({f"{uuid}_processed": adata})
     mdata.uns["epic_type "] = ['analyses', 'annotations']
 

@@ -7,8 +7,8 @@ hints:
     dockerPull: sennet/rna-data-products-python
 baseCommand: /opt/secondary_analysis_pt1.py
 
-inputs: 
-    annotated_raw_h5ad_file:
+inputs:
+    raw_h5ad_file:
         type: File
         doc: The raw h5ad file
         inputBinding:

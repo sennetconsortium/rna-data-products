@@ -50,7 +50,7 @@ outputs:
     
 steps:
 
-  - id: annotate-concatenate
+  - id: concatenate
     in:
       - id: enable_manhole
         source: enable_manhole
@@ -60,26 +60,24 @@ steps:
         source: uuids_file
       - id: tissue
         source: tissue
-      - id: organism
-        source: organism
 
     out:
-      - annotated_raw_h5ad_file
+      - raw_h5ad_file
       - data_product_metadata
-    run: steps/annotate-concatenate.cwl
-    label: "Annotates and concatenates h5ad data files in directory"
+    run: steps/concatenate.cwl
+    label: "Concatenates h5ad data files in directory"
 
   - id: secondary-analysis
     in:
-      - id: annotated_raw_h5ad_file
-        source: annotate-concatenate/annotated_raw_h5ad_file
+      - id: raw_h5ad_file
+        source: concatenate/raw_h5ad_file
       - id: tissue
         source: tissue
       - id: uuids_file
         source: uuids_file
       - id: data_product_metadata
-        source: annotate-concatenate/data_product_metadata
-    
+        source: concatenate/data_product_metadata
+
     out:
       - final_raw_h5mu_file
       - processed_h5ad_file
@@ -87,7 +85,7 @@ steps:
       - umap_png
       - final_data_product_metadata
     run: steps/secondary-analysis.cwl
-    label: "Runs secondary anaylsis on annotated and concatenated data"
+    label: "Runs secondary anaylsis on annotated and concatenated data and annotates with pan organ Azimuth"
 
   - id: make-shinycell
     in:
