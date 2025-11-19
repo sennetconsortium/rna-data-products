@@ -4,7 +4,7 @@ label: Annotates each h5ad file with dataset and tissue type, then concatenates
 
 hints:
   DockerRequirement:
-    dockerPull: hubmap/rna-data-products-python
+    dockerPull: sennet/rna-data-products-python
 baseCommand: /opt/annotate_concatenate.py
 
 inputs:
