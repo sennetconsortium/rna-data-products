@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:25.3.1-1
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -7,6 +7,7 @@ RUN apt-get update \
     autoconf \
     automake \
     bison \
+    fastqc \
     flex \
     git \
     libfreetype6-dev \
@@ -22,17 +23,18 @@ RUN apt-get update \
  && rm -rf /var/cache/apt/*
 
 ## Python packages
-COPY docker/azimuth/environment.yml /opt/environment.yml
-RUN conda env create -f /opt/environment.yml
-ENV CONDA_ENV_NAME=azimuth
-ENV CONDA_PREFIX=/opt/conda/envs/${CONDA_ENV_NAME}
-ENV PATH=${CONDA_PREFIX}/bin:$PATH
+COPY docker/azimuth/requirements.txt /opt/requirements.txt
+RUN pip3 install -r /opt/requirements.txt \
+ && rm -rf /root/.cache/pip
+
+RUN pip3 install git+https://github.com/satijalab/panhumanpy.git@d4c69410e7dc23213b7a848c8c1d8274e333272a
 
 RUN curl -L -o /opt/pan-human-azimuth-crosswalk.csv https://cdn.humanatlas.io/digital-objects/ctann/pan-human-azimuth/v1.0/assets/pan-human-azimuth-crosswalk.csv
 
 COPY bin/ /opt
 
 WORKDIR /opt
+
 RUN chmod -R +x /opt
 
 CMD ["/bin/bash"]
