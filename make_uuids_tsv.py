@@ -10,7 +10,7 @@ organ_types_yaml_file = "bin/organ_types.yaml"
 organ_uberon_file = "bin/organs.json"
 
 
-def get_uuids(organ_uberon: str):
+def get_uuids(organ_uberon: str, organism: str):
     params = {
         "status": "Published",
         "dataset_type": "RNAseq [Salmon]",
@@ -26,7 +26,7 @@ def get_uuids(organ_uberon: str):
 
     # Handle a successful response
     if response.status_code == 200:
-        return process_response(response)
+        return process_response(response, organism)
 
     # Handle 303 redirection
     elif response.status_code == 303:
@@ -38,7 +38,7 @@ def get_uuids(organ_uberon: str):
         # Make a request to the redirection URL
         redirection_response = requests.get(redirection_url)
         if redirection_response.status_code == 200:
-            return process_response(redirection_response)
+            return process_response(redirection_response, organism)
 
     # Handle other error responses
     else:
@@ -46,21 +46,27 @@ def get_uuids(organ_uberon: str):
         return [], [], []
 
 
-def process_response(response):
+def process_response(response, organism):
     data = response.json()
     items = data
 
     uuids = []
     sennet_ids = []
     donor_metadata_list = []
+    print(items[0])
 
     for item in items:
-        uuids.append(item.get("uuid"))
-        sennet_ids.append(item.get("sennet_id"))
+        sources = item.get("sources", [])
+        if not sources:
+            continue
+        source = sources[0]
+        if source.get("source_type").lower() == organism.lower():
+            uuids.append(item.get("uuid"))
+            sennet_ids.append(item.get("sennet_id"))
 
-        # Attempt to extract donor metadata
-        metadata = item.get("sources")[0]
-        donor_metadata_list.append(extract_donor_metadata(metadata))
+            # Attempt to extract donor metadata
+            metadata = item.get("sources")[0]
+            donor_metadata_list.append(extract_donor_metadata(metadata))
 
     return uuids, sennet_ids, donor_metadata_list
 
@@ -120,12 +126,12 @@ def get_organ_uberon(organ_name):
     return None
 
 
-def main(tissue_type: str):
+def main(tissue_type: str, organism:str):
     organ_dict = yaml.load(open(organ_types_yaml_file), Loader=yaml.BaseLoader)
     for key in organ_dict:
         organ_dict[key] = organ_dict[key]["description"]
     uberon_code = get_organ_uberon(tissue_type)
-    uuids_list, sennet_ids_list, donor_metadata = get_uuids(uberon_code)
+    uuids_list, sennet_ids_list, donor_metadata = get_uuids(uberon_code, organism)
     uuids_df = pd.DataFrame()
     uuids_df["uuid"] = pd.Series(uuids_list, dtype=str)
     uuids_df["sennet_id"] = pd.Series(sennet_ids_list, dtype=str)
@@ -136,6 +142,8 @@ def main(tissue_type: str):
         output_file_name = f"{key_for_tissue[0].lower()}.tsv"
     else:
         output_file_name = "rna.tsv"
+    result_df['organism'] = organism
+    result_df['tissue'] = tissue_type
     print(result_df)
     result_df.to_csv(output_file_name, sep="\t")
 
@@ -143,6 +151,7 @@ def main(tissue_type: str):
 if __name__ == "__main__":
     p = ArgumentParser()
     p.add_argument("tissue_type", type=str, nargs="?", help="Type of tissue (optional)")
+    p.add_argument("organism", type=str)
     args = p.parse_args()
 
-    main(args.tissue_type)
+    main(args.tissue_type, args.organism)
