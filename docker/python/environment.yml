@@ -6,8 +6,8 @@ dependencies:
   - python>=3.8,<3.10
   - pip
   - mudata
+  - anndata
   - pip:
-      - anndata
       - leidenalg
       - manhole
       - pandas
