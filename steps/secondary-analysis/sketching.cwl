@@ -4,11 +4,11 @@ label: Perform secondary analysis on raw data product
 
 hints:
   DockerRequirement:
-    dockerPull: hubmap/rna-data-products-sketching
+    dockerPull: sennet/rna-data-products-sketching
 baseCommand: /opt/sketching.py
 
-inputs: 
-    partially_processed_h5ad_file:
+inputs:
+    annotated_h5ad_file:
         type: File
         doc: The raw h5ad file
         inputBinding:

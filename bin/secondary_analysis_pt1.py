@@ -26,10 +26,9 @@ def add_file_sizes(data_product_metadata, raw_size):
     data_product_metadata["Raw File Size"] = raw_size
 
 
-def add_cell_counts(data_product_metadata, cell_counts, total_cell_count):
+def add_cell_counts(data_product_metadata, total_cell_count):
     with open(data_product_metadata, "r") as json_file:
         metadata = json.load(json_file)
-    metadata["Raw Cell Type Counts"] = cell_counts
     metadata["Raw Total Cell Count"] = total_cell_count
     return metadata
 
@@ -49,10 +48,8 @@ def main(
     dataset_info = pd.read_csv(uuids_tsv, sep="\t")
     annotated_obs = add_patient_metadata(adata.obs, dataset_info)
     total_cell_count = adata.obs.shape[0]
-    cell_type_counts = adata.obs["final_level_labels"].value_counts().to_dict()
-    adata.uns["cell_type_counts"] = json.dumps(cell_type_counts)
     metadata = add_cell_counts(
-        data_product_metadata, cell_type_counts, total_cell_count
+        data_product_metadata, total_cell_count
     )
     adata.obs = annotated_obs
 
@@ -61,20 +58,10 @@ def main(
     uuid = metadata["Data Product UUID"]
     # Convert to MuData and add Obj x Analyte requirements
     adata.obs['object_type'] = 'cell'
-    adata.uns['analye_class'] = 'RNA'
+    adata.uns['analyte_class'] = 'RNA'
     adata.uns['protocol'] = 'https://github.com/hubmapconsortium/rna-data-products.git'
-    if 'azimuth_label' in adata.obs_keys():
-        azimuth = adata.obs[['full_hierarchical_labels', 'final_level_labels', 'final_level_confidence', 'full_consistent_hierarchy', 'azimuth_broad', 'azimuth_medium', 'azimuth_fine', 'CL_Label', 'CL_ID']]
-        adata.obsm['annotation'] = pd.DataFrame(adata.obs['final_level_labels'])
-        adata.obsm['azimuth'] = azimuth
-        adata.uns['azimuth'] = {
-            'label': 'Cell Ontology Annotation',
-            'ontologyID': 'predicted_CLID',
-            'mechanism': 'machine',
-            'protocol': "10.1016/j.cell.2021.04.048",
-        }
     mdata = md.MuData({f"{uuid}_raw": adata})
-    mdata.uns['epic_type '] = ['analyses', 'annotations']
+    mdata.uns['epic_type '] = ['analyses']
     mdata.write(raw_output_file_name)
 
     raw_file_size = os.path.getsize(raw_output_file_name)
