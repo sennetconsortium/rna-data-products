@@ -53,7 +53,6 @@ def process_response(response, organism):
     uuids = []
     sennet_ids = []
     donor_metadata_list = []
-    print(items[0])
 
     for item in items:
         sources = item.get("sources", [])
