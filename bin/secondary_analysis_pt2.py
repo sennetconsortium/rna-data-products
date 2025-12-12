@@ -74,7 +74,7 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
 
     with plt.rc_context():
         sc.pl.umap(adata, color="leiden", show=False)
-        plt.savefig(f"{uuid}.png")
+        plt.savefig(f"{uuid}.png", bbox_inches="tight")
 
     # Convert to MuData and add Obj x Analyte requirements
     if 'annotation' in adata.obsm_keys():
@@ -113,10 +113,10 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
     offset = mcolors.TwoSlopeNorm(vmin=min_score, vcenter=0, vmax=max_score)
     cmap = cm.coolwarm
     adata.obs["DeepScence_binary"] = adata.obsm["DeepScence"]["binary"]
-    with new_plot():
+    with plt.rc_context():
         sc.pl.umap(adata, color="DeepScence_score", cmap=cmap, norm=offset)
         plt.savefig("umap_by_deepscence_continuous.pdf", bbox_inches="tight")
-    with new_plot():
+    with plt.rc_context():
         sc.pl.umap(adata, color="DeepScence_binary")
         plt.savefig("umap_by_deepscence_binary.pdf", bbox_inches="tight")
 

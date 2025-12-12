@@ -11,10 +11,12 @@ dependencies:
       - leidenalg
       - manhole
       - pandas
+      - numpy<2
       - pyyaml
       - requests
       - scanpy
       - zarr
       - muon
+      - tensorflow
       - git+https://github.com/anthony-qu/dca_patched.git
       - git+https://github.com/hubmapconsortium/DeepScence.git
