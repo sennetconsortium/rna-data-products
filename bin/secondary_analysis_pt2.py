@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
-from datetime import datetime
+from matplotlib import cm
 from pathlib import Path
 
 import anndata
 import json
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import muon as mu
 import numpy as np
@@ -104,6 +105,20 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
     mdata.write(f"{processed_output_file_name}.h5mu")
     processed_file_size = os.path.getsize(f"{processed_output_file_name}.h5mu")
     add_file_sizes(metadata, processed_file_size)
+
+    # Plot DeepScence results
+    adata.obs["DeepScence_score"] = adata.obsm["DeepScence"]["ds"]
+    max_score = adata.obs["DeepScence_score"].max()
+    min_score = adata.obs["DeepScence_score"].min()
+    offset = mcolors.TwoSlopeNorm(vmin=min_score, vcenter=0, vmax=max_score)
+    cmap = cm.coolwarm
+    adata.obs["DeepScence_binary"] = adata.obsm["DeepScence"]["binary"]
+    with new_plot():
+        sc.pl.umap(adata, color="DeepScence_score", cmap=cmap, norm=offset)
+        plt.savefig("umap_by_deepscence_continuous.pdf", bbox_inches="tight")
+    with new_plot():
+        sc.pl.umap(adata, color="DeepScence_binary")
+        plt.savefig("umap_by_deepscence_binary.pdf", bbox_inches="tight")
 
 
 if __name__ == "__main__":

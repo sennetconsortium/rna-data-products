@@ -47,6 +47,17 @@ outputs:
   shinycell_dir:
     outputSource: make-shinycell/shinycell_dir
     type: Directory
+  deepscence_continuous_plot:
+    outputSource: secondary-analysis/deepscence_continuous_plot
+    type: File
+    label: "Umap with coloring by DeepScence scores"
+  deepscence_binary_plot:
+    outputSource: secondary-analysis/deepscence_binary_plot
+    type: File
+    label: "Umap with coloring by DeepScence binary results"
+  deepscence_plot:
+    outputSource: deepscence/deepscence_plot
+    type: File
     
 steps:
 
@@ -67,10 +78,19 @@ steps:
     run: steps/concatenate.cwl
     label: "Concatenates h5ad data files in directory"
 
-  - id: secondary-analysis
+  - id: deepscence
     in:
       - id: raw_h5ad_file
         source: concatenate/raw_h5ad_file
+    out:
+      - raw_h5ad_with_ds
+      - deepscence_plot
+    run: steps/deepscence.cwl
+
+  - id: secondary-analysis
+    in:
+      - id: raw_h5ad_with_ds
+        source: deepscence/raw_h5ad_with_ds
       - id: tissue
         source: tissue
       - id: uuids_file
@@ -84,6 +104,8 @@ steps:
       - processed_h5mu_file
       - umap_png
       - final_data_product_metadata
+      - deepscence_continuous_plot
+      - deepscence_binary_plot
     run: steps/secondary-analysis.cwl
     label: "Runs secondary anaylsis on annotated and concatenated data and annotates with pan organ Azimuth"
 
