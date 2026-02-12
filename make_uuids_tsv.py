@@ -55,16 +55,19 @@ def process_response(response, organism):
     donor_metadata_list = []
 
     for item in items:
+        # skip bulk datasets
+        dataset_info = item.get("dataset_info", "")
+        if dataset_info and "bulk" in dataset_info.lower():
+            continue
+        # extract info from 'sources'
         sources = item.get("sources", [])
         if not sources:
             continue
         source = sources[0]
-        if source.get("source_type").lower() == organism.lower():
+        if source.get("source_type", "").lower() == organism.lower():
             uuids.append(item.get("uuid"))
             sennet_ids.append(item.get("sennet_id"))
-
-            # Attempt to extract donor metadata
-            metadata = item.get("sources")[0]
+            metadata = source
             donor_metadata_list.append(extract_donor_metadata(metadata))
 
     return uuids, sennet_ids, donor_metadata_list

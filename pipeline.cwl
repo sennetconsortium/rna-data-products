@@ -27,8 +27,17 @@ inputs:
     type: string?
   
   organism:
+    label: "human or mouse, default is human"
     type: string?
     default: "human"
+
+  access_key_id:
+    label: "AWS access key id"
+    type: string
+
+  secret_access_key:
+    label: "AWS secret access key"
+    type: string
 
 outputs:
 
@@ -122,3 +131,26 @@ steps:
 
     run: steps/make_shinycell.cwl
     label: "Creates the shiny cell app for the data product"
+
+  - id: upload-to-s3
+    in:
+      - id: final_raw_h5mu_file
+        source: secondary-analysis/final_raw_h5mu_file
+      - id: processed_h5mu_file
+        source: secondary-analysis/processed_h5mu_file
+      - id: umap_png
+        source: secondary-analysis/umap_png
+      - id: final_data_product_metadata
+        source: secondary-analysis/final_data_product_metadata
+      - id: shinycell_dir
+        source: make-shinycell/shinycell_dir
+      - id: tissue
+        source: tissue
+      - id: access_key_id
+        source: access_key_id
+      - id: secret_access_key
+        source: secret_access_key
+
+    out:
+      - finished_text
+    run: steps/upload-to-s3.cwl
