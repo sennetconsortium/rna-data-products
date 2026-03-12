@@ -69,17 +69,44 @@ def process_response(response, organism):
             sennet_ids.append(item.get("sennet_id"))
         # Attempt to extract donor metadata, if available
             metadata = source.get("metadata")
-            if metadata.get("living_donor_data"):
+            if organism == "mouse":
+                print(metadata)
+                donor_metadata_list.append(extract_mouse_metadata(metadata))
+            elif metadata.get("living_donor_data"):
                 donor_metadata = metadata.get("living_donor_data")
+                donor_metadata_list.append(extract_donor_metadata(donor_metadata))
             else:
                 donor_metadata = metadata.get("organ_donor_data")
-            donor_metadata_list.append(extract_donor_metadata(donor_metadata))
+                donor_metadata_list.append(extract_donor_metadata(donor_metadata))
 
     return (
         uuids,
         sennet_ids,
         donor_metadata_list,
     )
+
+
+def extract_mouse_metadata(donor_metadata):
+    mouse_info = {
+        "bedding": donor_metadata.get("bedding"),
+        "cage_enhancements": donor_metadata.get("cage_enhancements"),
+        "data_of_birth_or_fertilization": donor_metadata.get("data_of_birth_or_fertilization"),
+        "date_of_death": donor_metadata.get("date_of_death"),
+        "diet": donor_metadata.get("diet"),
+        "euthanization_method": donor_metadata.get("euthanization_method"),
+        "is_deceased": donor_metadata.get("is_deceased"),
+        "is_embryo": donor_metadata.get("is_embryo"),
+        "light_cycle": donor_metadata.get("light_cycle"),
+        "local_lifespan_data": donor_metadata.get("local_lifespan_data"),
+        "rack_setup": donor_metadata.get("rack_setup"),
+        "room_health_status": donor_metadata.get("room_health_status"),
+        "room_temperature": donor_metadata.get("room_temperature"),
+        "sex": donor_metadata.get("sex"),
+        "strain": donor_metadata.get("strain"),
+        "strain_rrid": donor_metadata.get("strain_rrid"),
+        "water_source": donor_metadata.get("water_source"),
+    }
+    return mouse_info
 
 
 def extract_donor_metadata(donor_metadata):
@@ -116,7 +143,6 @@ def extract_donor_metadata(donor_metadata):
             donor_info["medical_history"] = item.get("data_value")
         elif item.get("grouping_concept_preferred_term") == "Weight":
             donor_info["weight"] = item.get("data_value") + " " + item.get("units")
-    print(donor_info)
     return donor_info
 
 
@@ -147,7 +173,7 @@ def main(tissue_type: str, organism:str):
     result_df = pd.concat([uuids_df, donor_metadata_df], axis=1)
     key_for_tissue = [key for key, value in organ_dict.items() if value == tissue_type]
     if key_for_tissue:
-        output_file_name = f"{key_for_tissue[0].lower()}.tsv"
+        output_file_name = f"{key_for_tissue[0].lower()}_{organism}.tsv"
     else:
         output_file_name = "rna.tsv"
     result_df['organism'] = organism

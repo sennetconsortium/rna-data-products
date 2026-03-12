@@ -26,12 +26,12 @@ def add_cell_counts(data_product_metadata, cell_counts, total_cell_count):
 
 def add_file_sizes(data_product_metadata, processed_size):
     data_product_metadata["Processed File Size"] = processed_size
-    uuid = data_product_metadata["Data Product UUID"]
+    uuid = data_product_metadata["Integrated Map UUID"]
     with open(f"{uuid}.json", "w") as outfile:
         json.dump(data_product_metadata, outfile)
 
 
-def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
+def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None, organism: str = "human"):
     adata = anndata.read_h5ad(h5ad_file)
     processed_output_file_name = (
         f"{tissue}_processed" if tissue else "rna_processed"
@@ -39,7 +39,7 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
     total_cell_count = adata.obs.shape[0]
     with open(data_product_metadata, "r") as infile:
         metadata = json.load(infile)
-    uuid = metadata["Data Product UUID"]
+    uuid = metadata["Integrated Map UUID"]
     sc.pp.neighbors(adata, n_neighbors=50, n_pcs=50)
     sc.tl.umap(adata)
 

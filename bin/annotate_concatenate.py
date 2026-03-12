@@ -71,7 +71,7 @@ def find_file_pairs(directory):
 
 
 def annotate_file(
-    unfiltered_file: Path, tissue_type: str = None
+    unfiltered_file: Path, tissue_type: str = None, organism: str = "human"
 ) -> Tuple[anndata.AnnData, anndata.AnnData]:
     # Get the directory
     data_set_dir = fspath(unfiltered_file.parent.stem)
@@ -82,6 +82,7 @@ def annotate_file(
     unfiltered_copy.obs["original_obs_id"] = unfiltered_adata.obs.index
     unfiltered_copy.obs["dataset"] = data_set_dir
     unfiltered_copy.obs["tissue"] = tissue_type
+    unfiltered_copy.obs["organism"] = organism
 
     cell_ids_list = [
         "-".join([data_set_dir, barcode]) for barcode in unfiltered_copy.obs["original_obs_id"]
@@ -99,7 +100,7 @@ def read_gene_mapping() -> Dict[str, str]:
     for running this script inside and outside a Docker container.
     """
     for directory in GENE_MAPPING_DIRECTORIES:
-        mapping_file = directory / "ensembl_hugo_mapping.json.xz"
+        mapping_file = directory / "ensembl_hugo_mapping.json"
         if mapping_file.is_file():
             with lzma.open(mapping_file) as f:
                 json_bytes = f.read()
@@ -119,12 +120,13 @@ def map_gene_ids(var):
     return var
 
 
-def create_json(data_product_uuid, creation_time, uuids, sntids, cell_count, tissue = None):
+def create_json(data_product_uuid, creation_time, uuids, sntids, cell_count, tissue = None, organism = "human"):
     bucket_url = f"https://g-24f5cc.09193a.5898.dn.glob.us/public/hubmap-data-products/{data_product_uuid}"
     metadata = {
-        "Data Product UUID": data_product_uuid,
+        "Integrated Map UUID": data_product_uuid,
         "Tissue": convert_tissue_code(tissue) if tissue else None,
         "Assay": "rna",
+        "Organism": organism,
         "Raw URL": bucket_url + f"{tissue}_raw.h5mu" if tissue else bucket_url + "rna_raw.h5mu",
         "Processed URL": bucket_url + f"{tissue}_processed.h5mu" if tissue else bucket_url + "rna_processed.h5mu",
         "Creation Time": creation_time,
@@ -137,7 +139,7 @@ def create_json(data_product_uuid, creation_time, uuids, sntids, cell_count, tis
         json.dump(metadata, outfile)
 
 
-def main(data_directory: Path, uuids_file: Path, tissue: str = None):
+def main(data_directory: Path, uuids_file: Path, tissue: str = None, organism: str = "human"):
     raw_output_file_name = f"{tissue}_raw" if tissue else "rna_raw"
     uuids_df = pd.read_csv(uuids_file, sep="\t", dtype=str)
     uuids_list = uuids_df["uuid"].to_list()
@@ -150,7 +152,7 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
         if len(listdir(directory)) >= 1
     ]
     print("Annotating objects")
-    adatas = [annotate_file(file, tissue) for file in files]
+    adatas = [annotate_file(file, tissue, organism) for file in files]
     print("Concatenating objects")
     adata = anndata.concat(adatas, join="outer")
     creation_time = str(datetime.now())
@@ -168,7 +170,8 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None):
         uuids_list,
         sntids_list,
         total_cell_count,
-        tissue
+        tissue,
+        organism,
     )
 
 
@@ -177,6 +180,7 @@ if __name__ == "__main__":
     p.add_argument("data_directory", type=Path)
     p.add_argument("uuids_file", type=Path)
     p.add_argument("tissue", type=str, nargs="?")
+    p.add_argument("organism", type=str, nargs="?")
     p.add_argument("--enable_manhole", action="store_true")
 
     args = p.parse_args()
@@ -186,4 +190,4 @@ if __name__ == "__main__":
 
         manhole.install(activate_on="USR1")
 
-    main(args.data_directory, args.uuids_file, args.tissue)
+    main(args.data_directory, args.uuids_file, args.tissue, args.organism)

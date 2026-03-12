@@ -17,8 +17,6 @@ def add_patient_metadata(obs, uuids_df):
     merged = merged.set_index(obs.index)
     merged = merged.drop(columns=["Unnamed: 0"], errors='ignore')
     merged = merged.fillna(np.nan)
-    merged["age"] = pd.to_numeric(merged["age"], errors='coerce')
-    obs = obs.loc[:, ~obs.columns.str.contains("^Unnamed")]
     return merged
 
 

@@ -54,6 +54,4 @@ RUN R -e "install.packages('rjson')"
 COPY bin/make_shinycell.R /opt
 COPY data/ensembl_hugo_mapping.json.xz /opt
 
-RUN chmod -R +x /opt
-
 CMD ["/bin/bash"]
