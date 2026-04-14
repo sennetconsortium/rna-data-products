@@ -80,6 +80,8 @@ steps:
         source: uuids_file
       - id: tissue
         source: tissue
+      - id: organism
+        source: organism
 
     out:
       - raw_h5ad_file
@@ -91,6 +93,8 @@ steps:
     in:
       - id: raw_h5ad_file
         source: concatenate/raw_h5ad_file
+      - id: organism
+        source: organism
     out:
       - raw_h5ad_with_ds
       - deepscence_plot

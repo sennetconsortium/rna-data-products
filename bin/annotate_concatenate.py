@@ -100,7 +100,7 @@ def read_gene_mapping() -> Dict[str, str]:
     for running this script inside and outside a Docker container.
     """
     for directory in GENE_MAPPING_DIRECTORIES:
-        mapping_file = directory / "ensembl_hugo_mapping.json"
+        mapping_file = directory / "ensembl_hugo_mapping.json.xz"
         if mapping_file.is_file():
             with lzma.open(mapping_file) as f:
                 json_bytes = f.read()

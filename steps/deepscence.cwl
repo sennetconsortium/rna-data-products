@@ -11,6 +11,11 @@ inputs:
     type: File
     inputBinding:
       position: 0
+  organism:
+    type: string?
+    inputBinding:
+      position: 1
+
 outputs:
   raw_h5ad_with_ds:
     type: File
