@@ -22,16 +22,6 @@ sce <- readH5AD(inpFile, use_hdf5 = TRUE)
 
 sce <- logNormCounts(sce, assay.type="unscaled")
 
-#get the hugo symbols
-hugos <- Features(sce("hugo_symbol")
-print(hugos)
-
-#convert to 1-d list
-hugos<-unlist(hugos)
-
-#replace the rownames of the sce
-rownames(sce)<-hugos
-
 tryCatch({
   scConf = createConfig(sce)
 },
@@ -61,5 +51,5 @@ options(error = function() {
 })
 
 title = sprintf("Shiny Cell h5ad % s", tissue)
-makeShinyApp(sce, scConf, shiny.dir = shinyDir, shiny.title = title) 
+makeShinyApp(sce, scConf, shiny.dir = shinyDir, shiny.title = title, gene.mapping=TRUE)
  
