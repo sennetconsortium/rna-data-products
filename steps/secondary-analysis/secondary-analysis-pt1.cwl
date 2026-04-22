@@ -8,7 +8,7 @@ hints:
 baseCommand: /opt/secondary_analysis_pt1.py
 
 inputs:
-    raw_h5ad_file:
+    raw_h5ad_with_ds:
         type: File
         doc: The raw h5ad file
         inputBinding:

@@ -35,6 +35,4 @@ COPY bin/ /opt
 
 WORKDIR /opt
 
-RUN chmod -R +x /opt
-
 CMD ["/bin/bash"]

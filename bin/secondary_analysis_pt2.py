@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
-from datetime import datetime
+from matplotlib import cm
 from pathlib import Path
 
 import anndata
 import json
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import muon as mu
 import numpy as np
@@ -25,12 +26,12 @@ def add_cell_counts(data_product_metadata, cell_counts, total_cell_count):
 
 def add_file_sizes(data_product_metadata, processed_size):
     data_product_metadata["Processed File Size"] = processed_size
-    uuid = data_product_metadata["Data Product UUID"]
+    uuid = data_product_metadata["Integrated Map UUID"]
     with open(f"{uuid}.json", "w") as outfile:
         json.dump(data_product_metadata, outfile)
 
 
-def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
+def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None, organism: str = "human"):
     adata = anndata.read_h5ad(h5ad_file)
     processed_output_file_name = (
         f"{tissue}_processed" if tissue else "rna_processed"
@@ -38,7 +39,7 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
     total_cell_count = adata.obs.shape[0]
     with open(data_product_metadata, "r") as infile:
         metadata = json.load(infile)
-    uuid = metadata["Data Product UUID"]
+    uuid = metadata["Integrated Map UUID"]
     sc.pp.neighbors(adata, n_neighbors=50, n_pcs=50)
     sc.tl.umap(adata)
 
@@ -73,7 +74,7 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
 
     with plt.rc_context():
         sc.pl.umap(adata, color="leiden", show=False)
-        plt.savefig(f"{uuid}.png")
+        plt.savefig(f"{uuid}.png", bbox_inches="tight")
 
     # Convert to MuData and add Obj x Analyte requirements
     if 'annotation' in adata.obsm_keys():
@@ -104,6 +105,20 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None):
     mdata.write(f"{processed_output_file_name}.h5mu")
     processed_file_size = os.path.getsize(f"{processed_output_file_name}.h5mu")
     add_file_sizes(metadata, processed_file_size)
+
+    # Plot DeepScence results
+    adata.obs["DeepScence_score"] = adata.obsm["DeepScence"]["ds"]
+    max_score = adata.obs["DeepScence_score"].max()
+    min_score = adata.obs["DeepScence_score"].min()
+    offset = mcolors.TwoSlopeNorm(vmin=min_score, vcenter=0, vmax=max_score)
+    cmap = cm.coolwarm
+    adata.obs["DeepScence_binary"] = adata.obsm["DeepScence"]["binary"]
+    with plt.rc_context():
+        sc.pl.umap(adata, color="DeepScence_score", cmap=cmap, norm=offset)
+        plt.savefig("umap_by_deepscence_continuous.pdf", bbox_inches="tight")
+    with plt.rc_context():
+        sc.pl.umap(adata, color="DeepScence_binary")
+        plt.savefig("umap_by_deepscence_binary.pdf", bbox_inches="tight")
 
 
 if __name__ == "__main__":

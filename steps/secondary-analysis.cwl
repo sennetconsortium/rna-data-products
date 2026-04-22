@@ -9,7 +9,7 @@ requirements:
 
 inputs:
 
-  raw_h5ad_file:
+  raw_h5ad_with_ds:
     label: "Concatenated h5ad file"
     type: File
 
@@ -42,13 +42,21 @@ outputs:
   final_data_product_metadata:
     outputSource: secondary-analysis-pt2/final_data_product_metadata
     type: File
+  deepscence_continuous_plot:
+    outputSource: secondary-analysis-pt2/deepscence_continuous_plot
+    type: File
+    label: "Umap with coloring by DeepScence scores"
+  deepscence_binary_plot:
+    outputSource: secondary-analysis-pt2/deepscence_binary_plot
+    type: File
+    label: "Umap with coloring by DeepScence binary results"
 
 steps:
 
   - id: secondary-analysis-pt1
     in:
-      - id: raw_h5ad_file
-        source: raw_h5ad_file
+      - id: raw_h5ad_with_ds
+        source: raw_h5ad_with_ds
       - id: tissue
         source: tissue
       - id: uuids_file
@@ -96,5 +104,7 @@ steps:
       - processed_h5mu_file
       - umap_png
       - final_data_product_metadata
+      - deepscence_binary_plot
+      - deepscence_continuous_plot
     run: secondary-analysis/secondary-analysis-pt2.cwl
     label: "Runs secondary anaylsis on annotated and concatenated data"

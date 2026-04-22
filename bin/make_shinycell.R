@@ -15,37 +15,12 @@ inpFile <- args[1]
 tissue <- args[2]
 metadata_file <- args[3]
 
-mapping_file <- "/opt/ensembl_to_symbol.json"
 
 options(future.globals.maxSize = 8000 * 1024^2)
 
 sce <- readH5AD(inpFile, use_hdf5 = TRUE)
 
 sce <- logNormCounts(sce, assay.type="unscaled")
-
-#read the mapping file
-hugoMapping <- fromJSON(file=mapping_file)
-
-#get the ensemble ids
-ensIds <- rownames(sce)
-
-#convert ensemble ids to hugo sybmols
-hugos<-unname(hugoMapping[ensIds])
-
-#replace null hugos with the ensId
-for (i in 1:length(hugos)){
-  h <- unlist(hugos[i])
-  if(is.null(h)){
-    hugos[i]<-ensIds[i]}
-  else{
-    hugos[i]<-h
-  }
-}
-#convert to 1-d list
-hugos<-unlist(hugos)
-
-#replace the rownames of the sce
-rownames(sce)<-hugos
 
 tryCatch({
   scConf = createConfig(sce)
@@ -61,7 +36,7 @@ mainDir = "shinyApps"
 subDir = tissue
 
 json_data <- fromJSON(file=metadata_file)
-uuid = json_data['Data Product UUID']
+uuid = json_data['Integrated Map UUID']
 
 tissueDir <- file.path(mainDir, subDir)
 shinyDir <- file.path(mainDir, subDir, uuid)
@@ -76,5 +51,5 @@ options(error = function() {
 })
 
 title = sprintf("Shiny Cell h5ad % s", tissue)
-makeShinyApp(sce, scConf, shiny.dir = shinyDir, shiny.title = title) 
+makeShinyApp(sce, scConf, shiny.dir = shinyDir, shiny.title = title, gene.mapping=TRUE)
  

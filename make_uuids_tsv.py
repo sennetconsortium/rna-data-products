@@ -55,22 +55,61 @@ def process_response(response, organism):
     donor_metadata_list = []
 
     for item in items:
+        # skip bulk datasets
+        dataset_info = item.get("dataset_info", "")
+        if dataset_info and "bulk" in dataset_info.lower():
+            continue
+        # extract info from 'sources'
         sources = item.get("sources", [])
         if not sources:
             continue
         source = sources[0]
-        if source.get("source_type").lower() == organism.lower():
+        if source.get("source_type", "").lower() == organism.lower():
             uuids.append(item.get("uuid"))
             sennet_ids.append(item.get("sennet_id"))
+        # Attempt to extract donor metadata, if available
+            metadata = source.get("metadata")
+            if organism == "mouse":
+                print(metadata)
+                donor_metadata_list.append(extract_mouse_metadata(metadata))
+            elif metadata.get("living_donor_data"):
+                donor_metadata = metadata.get("living_donor_data")
+                donor_metadata_list.append(extract_donor_metadata(donor_metadata))
+            else:
+                donor_metadata = metadata.get("organ_donor_data")
+                donor_metadata_list.append(extract_donor_metadata(donor_metadata))
 
-            # Attempt to extract donor metadata
-            metadata = item.get("sources")[0]
-            donor_metadata_list.append(extract_donor_metadata(metadata))
+    return (
+        uuids,
+        sennet_ids,
+        donor_metadata_list,
+    )
 
-    return uuids, sennet_ids, donor_metadata_list
+
+def extract_mouse_metadata(donor_metadata):
+    mouse_info = {
+        "bedding": donor_metadata.get("bedding"),
+        "cage_enhancements": donor_metadata.get("cage_enhancements"),
+        "data_of_birth_or_fertilization": donor_metadata.get("data_of_birth_or_fertilization"),
+        "date_of_death": donor_metadata.get("date_of_death"),
+        "diet": donor_metadata.get("diet"),
+        "euthanization_method": donor_metadata.get("euthanization_method"),
+        "is_deceased": donor_metadata.get("is_deceased"),
+        "is_embryo": donor_metadata.get("is_embryo"),
+        "light_cycle": donor_metadata.get("light_cycle"),
+        "local_lifespan_data": donor_metadata.get("local_lifespan_data"),
+        "rack_setup": donor_metadata.get("rack_setup"),
+        "room_health_status": donor_metadata.get("room_health_status"),
+        "room_temperature": donor_metadata.get("room_temperature"),
+        "sex": donor_metadata.get("sex"),
+        "strain": donor_metadata.get("strain"),
+        "strain_rrid": donor_metadata.get("strain_rrid"),
+        "water_source": donor_metadata.get("water_source"),
+    }
+    return mouse_info
 
 
-def extract_donor_metadata(metadata):
+def extract_donor_metadata(donor_metadata):
     donor_info = {
         "age": None,
         "sex": None,
@@ -79,35 +118,31 @@ def extract_donor_metadata(metadata):
         "bmi": None,
         "cause_of_death": None,
         "race": None,
-        "social_history": None,
+        "medical_history": None,
         "abo_blood_type": None,
         "mechanism_of_injury": None,
     }
-
-    donor_metadata = metadata.get("mapped_metadata", {})
-
-    for key in donor_metadata:
-        if key == "abo_blood_group_system":
-            donor_info["abo_blood_type"] = donor_metadata[key].get("value_display")
-        elif key == "age":
-            donor_info["age"] = donor_metadata[key].get("value_display")
-        elif key == "body_mass_index":
-            donor_info["bmi"] = donor_metadata[key].get("value_display")
-        elif key == "cause_of_death":
-            donor_info["cause_of_death"] = donor_metadata[key].get("value_display")
-        elif key == "height":
-            donor_info["height"] = donor_metadata[key].get("value_display")
-        elif key == "mechanism_of_injury":
-            donor_info["mechanism_of_injury"] = donor_metadata[key].get("value_display")
-        elif key == "race":
-            donor_info["race"] = donor_metadata[key].get("value_display")
-        elif key == "sex":
-            donor_info["sex"] = donor_metadata[key].get("value_display")
-        elif key == "social_history":
-            donor_info["social_history"] = donor_metadata[key].get("value_display")
-        elif key == "weight":
-            donor_info["weight"] = donor_metadata[key].get("value_display")
-
+    for item in donor_metadata:
+        if item.get("grouping_concept_preferred_term") == "ABO blood group system":
+            donor_info["abo_blood_type"] = item.get("data_value")
+        elif item.get("grouping_concept_preferred_term") == "Age":
+            donor_info["age"] = item.get("data_value") + " " + item.get("units")
+        elif item.get("grouping_concept_preferred_term") == "Body Mass Index":
+            donor_info["bmi"] = item.get("data_value") + " " + item.get("units")
+        elif item.get("grouping_concept_preferred_term") == "Cause of Death":
+            donor_info["cause_of_death"] = item.get("data_value")
+        elif item.get("grouping_concept_preferred_term") == "Height":
+            donor_info["height"] = item.get("data_value") + " " + item.get("units")
+        elif item.get("grouping_concept_preferred_term") == "Mechanism of Injury":
+            donor_info["mechanism_of_injury"] = item.get("data_value")
+        elif item.get("grouping_concept_preferred_term") == "Race":
+            donor_info["race"] = item.get("data_value")
+        elif item.get("grouping_concept_preferred_term") == "Sex":
+            donor_info["sex"] = item.get("data_value")
+        elif item.get("grouping_concept_preferred_term") == "Medical History":
+            donor_info["medical_history"] = item.get("data_value")
+        elif item.get("grouping_concept_preferred_term") == "Weight":
+            donor_info["weight"] = item.get("data_value") + " " + item.get("units")
     return donor_info
 
 
@@ -138,7 +173,7 @@ def main(tissue_type: str, organism:str):
     result_df = pd.concat([uuids_df, donor_metadata_df], axis=1)
     key_for_tissue = [key for key, value in organ_dict.items() if value == tissue_type]
     if key_for_tissue:
-        output_file_name = f"{key_for_tissue[0].lower()}.tsv"
+        output_file_name = f"{key_for_tissue[0].lower()}_{organism}.tsv"
     else:
         output_file_name = "rna.tsv"
     result_df['organism'] = organism

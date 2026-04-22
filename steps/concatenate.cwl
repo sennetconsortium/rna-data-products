@@ -32,6 +32,12 @@ inputs:
     inputBinding:
       position: 4
 
+  organism:
+    type: string?
+    doc: human or mouse
+    inputBinding:
+      position: 5
+
 outputs:
   raw_h5ad_file:
     type: File

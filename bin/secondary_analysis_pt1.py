@@ -17,8 +17,6 @@ def add_patient_metadata(obs, uuids_df):
     merged = merged.set_index(obs.index)
     merged = merged.drop(columns=["Unnamed: 0"], errors='ignore')
     merged = merged.fillna(np.nan)
-    merged["age"] = pd.to_numeric(merged["age"], errors='coerce')
-    obs = obs.loc[:, ~obs.columns.str.contains("^Unnamed")]
     return merged
 
 
@@ -55,11 +53,11 @@ def main(
 
     with open(data_product_metadata, "r") as infile:
         metadata = json.load(infile)
-    uuid = metadata["Data Product UUID"]
+    uuid = metadata["Integrated Map UUID"]
     # Convert to MuData and add Obj x Analyte requirements
     adata.obs['object_type'] = 'cell'
     adata.uns['analyte_class'] = 'RNA'
-    adata.uns['protocol'] = 'https://github.com/hubmapconsortium/rna-data-products.git'
+    adata.uns['protocol'] = 'https://github.com/sennetconsortium/rna-data-products.git'
     mdata = md.MuData({f"{uuid}_raw": adata})
     mdata.uns['epic_type '] = ['analyses']
     mdata.write(raw_output_file_name)
@@ -69,7 +67,7 @@ def main(
     with open(f"{uuid}.json", "w") as outfile:
         json.dump(metadata, outfile)
 
-    print("Processing data product")
+    print("Processing integrated map")
     adata.var_names_make_unique()
     adata.obs_names_make_unique()
 
