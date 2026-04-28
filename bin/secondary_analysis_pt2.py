@@ -101,10 +101,6 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None, organis
     mdata.uns["epic_type "] = ['analyses', 'annotations']
 
     print(f"Writing {processed_output_file_name}")
-    # Put HUGO symbols as var_names for shinycell purposes
-    adata.var['ensembl_ids'] = adata.var_names
-    adata.var_names = adata.var['hugo_symbol']
-    adata.write(f"{processed_output_file_name}.h5ad")
     mdata.write(f"{processed_output_file_name}.h5mu")
     processed_file_size = os.path.getsize(f"{processed_output_file_name}.h5mu")
     add_file_sizes(metadata, processed_file_size)
@@ -122,6 +118,11 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None, organis
     with plt.rc_context():
         sc.pl.umap(adata, color="DeepScence_binary")
         plt.savefig("umap_by_deepscence_binary.pdf", bbox_inches="tight")
+
+    # Put HUGO symbols as var_names for shinycell purposes
+    adata.var['ensembl_ids'] = adata.var_names
+    adata.var_names = adata.var['hugo_symbol']
+    adata.write(f"{processed_output_file_name}.h5ad")
 
 
 if __name__ == "__main__":
