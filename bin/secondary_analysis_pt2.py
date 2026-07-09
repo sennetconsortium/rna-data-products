@@ -121,6 +121,7 @@ def main(h5ad_file: Path, data_product_metadata: Path, tissue: str=None, organis
 
     # Put HUGO symbols as var_names for shinycell purposes
     adata.var['ensembl_ids'] = adata.var_names
+    adata.var['hugo_symbol'] = adata.var['hugo_symbol'].fillna(adata.var['ensembl_ids'])
     adata.var_names = adata.var['hugo_symbol']
     adata.write(f"{processed_output_file_name}.h5ad")
 
