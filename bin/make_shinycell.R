@@ -52,4 +52,3 @@ options(error = function() {
 
 title = sprintf("Shiny Cell h5ad % s", tissue)
 makeShinyApp(sce, scConf, shiny.dir = shinyDir, shiny.title = title)
- 
