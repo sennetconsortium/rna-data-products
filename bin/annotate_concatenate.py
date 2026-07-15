@@ -161,6 +161,8 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None, organism: s
     data_product_uuid = str(uuid.uuid4())
     adata.uns["uuid"] = data_product_uuid
     adata.var = map_gene_ids(adata.var)
+    print(adata)
+    print(adata.obsm)
     print(f"Writing {raw_output_file_name}")
     adata.write(f"{raw_output_file_name}.h5ad")
     total_cell_count = adata.obs.shape[0]
