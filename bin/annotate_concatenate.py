@@ -162,7 +162,7 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None, organism: s
     adata.uns["uuid"] = data_product_uuid
     adata.var = map_gene_ids(adata.var)
     # delete deepscence bc im gonna run it later
-    if "DeepScence" in adata.obsm.colums:
+    if "DeepScence" in adata.obsm.keys():
         del adata.obsm['DeepScence']
     print(f"Writing {raw_output_file_name}")
     adata.write(f"{raw_output_file_name}.h5ad")
