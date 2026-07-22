@@ -162,7 +162,8 @@ def main(data_directory: Path, uuids_file: Path, tissue: str = None, organism: s
     adata.uns["uuid"] = data_product_uuid
     adata.var = map_gene_ids(adata.var)
     # delete deepscence bc im gonna run it later
-    del adata.obsm['DeepScence']
+    if "DeepScence" in adata.obsm.colums:
+        del adata.obsm['DeepScence']
     print(f"Writing {raw_output_file_name}")
     adata.write(f"{raw_output_file_name}.h5ad")
     total_cell_count = adata.obs.shape[0]
